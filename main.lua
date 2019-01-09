@@ -1,19 +1,42 @@
 platform = {}
 player = {}
+viewport = {}
 
 -- gets called only once when the game is started
 function love.load()
    -- set up overall window attributes
-   love.window.setMode(800, 600, {highdpi=true})
+   local w = 800
+   local h = 600
+   love.window.setMode(w, h, {highdpi=true})
    love.graphics.setBackgroundColor(0.15, 0.1, 0.12)
 
+   -- setting up the platform (bottom half of the screen)
+   platform.x = 0
+   platform.y = 4 * h / 5
+   platform.width = w
+   platform.height = h - platform.y
+
+   -- set up the viewport and bg images
+   viewport.bg1 = love.graphics.newImage("texture0.png")
+   viewport.bg2 = love.graphics.newImage("texture1.png")
+   viewport.bg1:setWrap('repeat', 'repeat')
+   viewport.bg2:setWrap('repeat', 'repeat')
+   viewport.quad1 = love.graphics.newQuad(platform.x, platform.y,
+					  platform.width, platform.height,
+					  viewport.bg1:getWidth(),
+					  viewport.bg1:getHeight())
+   viewport.quad2 = love.graphics.newQuad(0, 0,
+					  w, h - platform.height,
+					  viewport.bg2:getWidth(),
+					  viewport.bg2:getHeight())
+   
    -- sprite image, see: https://love2d.org/wiki/Tutorial:Animation
    player.img = newAnimation(love.graphics.newImage("oldHero.png"),
 			     16, 18, 1)   
    -- some state variables for image and time tracking
    player.scale = 2
    player.x = love.graphics.getWidth() / 2;
-   player.y = (love.graphics.getHeight() / 2)
+   player.y = platform.y
       - player.scale * player.img.spriteSheet:getHeight();
    player.speed = player.scale * 300
    -- gravity-based properties for the player sprite
@@ -23,12 +46,6 @@ function love.load()
    player.gravity = -1100 * player.scale
    player.direction = true; -- true for positive x, false for negative x
 
-   -- setting up the platform (bottom half of the screen)
-   platform.width = love.graphics.getWidth()
-   platform.height = love.graphics.getHeight()
-   platform.x = 0
-   platform.y = platform.height / 2
-      
    -- imagefont, see: https://love2d.org/wiki/Tutorial:Fonts_and_Text
    font = love.graphics.newImageFont("Imagefont.png",
 				     " abcdefghijklmnopqrstuvwxyz" ..
@@ -38,7 +55,7 @@ function love.load()
    
    -- sound (ahahahah)
    source = love.audio.newSource("Table_hit.ogg", "stream")
-   love.audio.play(source)
+   -- love.audio.play(source)
 end
 
 -- called continuously, where the math is done
@@ -97,10 +114,11 @@ end
 -- all the drawing happens here
 function love.draw()
    -- draw the platform
+   love.graphics.draw(viewport.bg1, viewport.quad1, platform.x, platform.y)
    oldColor = { love.graphics.getColor() }
-   love.graphics.setColor(0.1, 0.32, 0.2) -- set platform color to green
-   love.graphics.rectangle('fill', platform.x, platform.y,
-			   platform.width, platform.height)
+   love.graphics.setColor(0.45, 0.83, 0.95) -- set sky bg color to light-blue
+   love.graphics.rectangle('fill', 0, 0,
+   			   platform.width, platform.y)
    love.graphics.setColor(oldColor) -- reset previous color
 
    -- draw the sprite
@@ -136,7 +154,7 @@ end
 function love.keypressed(key, u)
    -- Debug
    if key == "lctrl" then
-      debug.debug()
+      -- debug.debug()
    end
 end
 
