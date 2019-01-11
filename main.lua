@@ -1,6 +1,7 @@
 platform = {}
 player = {}
 viewport = {}
+map = {}
 
 -- gets called only once when the game is started
 function love.load()
@@ -10,11 +11,17 @@ function love.load()
    love.window.setMode(w, h, {highdpi=true})
    love.graphics.setBackgroundColor(0.15, 0.1, 0.12)
 
+   -- map dimensions and coordinates
+   map.w = 2 * w   
+   map.h = 2 * h
+   map.x = 0
+   map.y = (-1 * map.h) + h
+
    -- setting up the platform (bottom half of the screen)
-   platform.x = 0
-   platform.y = 4 * h / 5
-   platform.width = w
-   platform.height = h - platform.y
+   platform.x = map.x
+   platform.y = map.h - (h/5)
+   platform.width = map.w
+   platform.height = h/5
 
    -- set up the viewport and bg images
    viewport.bg1 = love.graphics.newImage("texture0.png")
@@ -31,12 +38,14 @@ function love.load()
 					  viewport.bg2:getHeight())
    
    -- sprite image, see: https://love2d.org/wiki/Tutorial:Animation
+   player.imgw = 16
+   player.imgh = 18
    player.img = newAnimation(love.graphics.newImage("oldHero.png"),
-			     16, 18, 1)   
+			     player.imgw, player.imgh, 1)
    -- some state variables for image and time tracking
    player.scale = 2
    player.x = love.graphics.getWidth() / 2;
-   player.y = platform.y
+   player.y = (platform.y + map.y)
       - player.scale * player.img.spriteSheet:getHeight();
    player.speed = player.scale * 300
    -- gravity-based properties for the player sprite
@@ -55,34 +64,39 @@ function love.load()
    
    -- sound (ahahahah)
    source = love.audio.newSource("Table_hit.ogg", "stream")
-   -- love.audio.play(source)
+   love.audio.play(source)
 end
 
 -- called continuously, where the math is done
 function love.update(dt)
 
    -- calculate sprite texture width and height properties
-   local _, _, sw, sh = player.img.quads[1]:getViewport()
+   local sw, sh = player.imgw, player.imgh
    sw, sh = sw * player.scale, sh * player.scale -- rescale!
-   
-   -- move image position based on arrow keys
-   -- if love.keyboard.isDown("up") or love.keyboard.isDown("w") then
-   --    if player.y > 0 then
-   -- 	 player.y = player.y - player.speed * dt
-   --    end
-   -- elseif love.keyboard.isDown("down") or love.keyboard.isDown("s") then
-   --    if player.y < love.graphics.getHeight() - sh then
-   -- 	 player.y = player.y + player.speed * dt
-   --    end
-   -- end
+
+   local w = love.graphics.getWidth()
+   local h = love.graphics.getHeight()
+   local limitfrac = 0.5
    if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
-      if player.x > 0 then
+      if player.x > w*limitfrac then
 	 player.x = player.x - player.speed * dt
+      else
+	 if map.x < 0 then
+	    map.x = map.x + player.speed * dt
+	 elseif player.x > 0 then
+	    player.x = player.x - player.speed * dt
+	 end
       end
       player.direction = false
    elseif love.keyboard.isDown("right") or love.keyboard.isDown("d") then
-      if player.x < love.graphics.getWidth() - sw then
+      if player.x < w*(1 - limitfrac) -sw then
 	 player.x = player.x + player.speed * dt
+      else
+	 if map.x > (w - map.w) then
+	    map.x = map.x - player.speed * dt
+	 elseif player.x < w - sw then
+	    player.x = player.x + player.speed * dt
+	 end
       end
       player.direction = true
    end
@@ -113,6 +127,8 @@ end
 
 -- all the drawing happens here
 function love.draw()
+   love.graphics.push("all")
+   love.graphics.translate(map.x, map.y)
    -- draw the platform
    love.graphics.draw(viewport.bg1, viewport.quad1, platform.x, platform.y)
    oldColor = { love.graphics.getColor() }
@@ -120,6 +136,8 @@ function love.draw()
    love.graphics.rectangle('fill', 0, 0,
    			   platform.width, platform.y)
    love.graphics.setColor(oldColor) -- reset previous color
+   -- love.graphics.translate(-1*map.x, -1*map.y)
+   love.graphics.pop()
 
    -- draw the sprite
    local animfrac = player.img.currentTime / player.img.duration
@@ -136,7 +154,7 @@ function love.draw()
    end
    love.graphics.draw(player.img.spriteSheet, quad,
 		      player.x + (player.scale * xdelta), player.y,
-		      0, 2*xdirmult, 2, 0)
+    		      0, 2*xdirmult, 2, 0)
    
    -- draw text
    love.graphics.print("Use left/right arrow keys or space to move...", 0, 0)
