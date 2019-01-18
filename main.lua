@@ -1,27 +1,29 @@
-platform = {}
-player = {}
-viewport = {}
-map = {}
+-- Global variables
+platform = {} -- a table that stores the bottom platform
+player = {}   -- a table that stores the player position
+viewport = {} -- a table that stores the current viewport for sprites
+map = {}      -- a table that stores coordinates for the bg map
+tiles = {}    -- stores an array of tiles
 
 -- gets called only once when the game is started
 function love.load()
    -- set up overall window attributes
    local w = 800
-   local h = 600
+   local h = 640
    love.window.setMode(w, h, {highdpi=true})
    love.graphics.setBackgroundColor(0.15, 0.1, 0.12)
 
    -- map dimensions and coordinates
-   map.w = 2 * w   
+   map.w = 2 * w
    map.h = 2 * h
    map.x = 0
    map.y = (-1 * map.h) + h
 
    -- setting up the platform (bottom half of the screen)
    platform.x = map.x
-   platform.y = map.h - (h/5)
-   platform.width = map.w
    platform.height = h/5
+   platform.y = map.h - platform.height
+   platform.width = map.w
 
    -- set up the viewport and bg images
    viewport.bg1 = love.graphics.newImage("texture0.png")
@@ -44,12 +46,14 @@ function love.load()
 			     player.imgw, player.imgh, 1)
    -- some state variables for image and time tracking
    player.scale = 2
+   player.w = player.scale * player.imgw
+   player.h = player.scale * player.imgh
    player.x = love.graphics.getWidth() / 2;
    player.y = (platform.y + map.y)
-      - player.scale * player.img.spriteSheet:getHeight();
+      - player.scale * player.img.spriteSheet:getHeight()
    player.speed = player.scale * 300
    -- gravity-based properties for the player sprite
-   player.ground = player.y -- Landing height
+   player.ground = h -- player.y + player.h -- Landing height
    player.y_velocity = 0
    player.jump_height = -500 * player.scale
    player.gravity = -1100 * player.scale
@@ -65,6 +69,51 @@ function love.load()
    -- sound (ahahahah)
    source = love.audio.newSource("Table_hit.ogg", "stream")
    love.audio.play(source)
+
+   -- background tiles
+   for i=0,3 do
+      tiles[i] = love.graphics.newImage("tile"..i..".png")
+   end
+   tiles.scale = 1
+   tiles.w = tiles[0]:getWidth()   -- 64 px
+   tiles.h = tiles[0]:getHeight()
+
+   tiles.map = {
+      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
+      {0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0}, 
+      {0,0,0,0,1,1,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,2,3,3,0}, 
+      {0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,2,2,0,0,0}, 
+      {0,0,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,2,2,0,0,0}, 
+      {0,2,1,1,1,0,0,0,0,0,0,0,0,3,0,0,1,1,1,1,2,2,0,0,0}, 
+      {0,2,0,0,1,0,0,0,0,0,0,0,0,3,0,0,1,1,1,1,2,2,3,3,0}, 
+      {0,2,0,0,1,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0}, 
+      {0,1,1,1,1,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0}, 
+      {0,0,0,0,0,0,0,0,3,1,0,2,2,2,2,3,0,0,0,1,1,1,1,0,0}, 
+      {0,0,0,0,0,0,0,3,3,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
+      {0,0,0,0,0,0,3,0,3,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,3}, 
+      {0,0,0,0,0,3,3,3,3,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,3}, 
+      {0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,2,0,0,0,0,3,0}, 
+      {0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,3,0,0,3,0,0}, 
+      {0,2,0,0,0,0,0,1,1,1,0,0,0,0,0,0,2,0,2,0,0,3,0,0,0}, 
+      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0}, 
+      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+      {3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3}, -- floor
+      {3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3},
+   }
+   tiles.findground = function (tiles, player)
+      -- find x-th tile
+      x, y = player.x - map.x, (player.y + player.h) - map.y
+      xindex = math.ceil(x / tiles.w)
+      yindex = math.ceil(y / tiles.h)
+      if xindex == 0 then xindex = 1 end
+      if yindex == 0 then yindex = 1 end
+      for yindex=yindex+1,#tiles.map do
+	 if tiles.map[yindex][xindex] > 0 then
+	    return (yindex-1)*tiles.h -- top edge of box
+	 end
+      end
+      return 10000 - map.y
+   end
 end
 
 -- called continuously, where the math is done
@@ -101,21 +150,42 @@ function love.update(dt)
       player.direction = true
    end
 
+   -- move map y coordinates
+   yfrac = 0.2
+   if player.y < yfrac * h then
+      map.y = map.y + ((yfrac * h) - player.y)
+      player.y = yfrac * h
+   elseif player.y > (1-yfrac)*h then
+      map.y = map.y + (((1-yfrac)*h) - player.y)
+      player.y = (1-yfrac) * h
+   end
+
    -- jump! physics
    if love.keyboard.isDown('space') then
       if player.y_velocity == 0 then
 	 player.y_velocity = player.jump_height
       end
    end
+   
+   -- recalculate ground based on (x,y)
+   newground = tiles:findground(player)
    -- update current position and velocity
-   if player.y_velocity ~= 0 then
-      player.y = player.y + player.y_velocity * dt
+   if (player.y_velocity ~= 0) then
+      possible_y = player.y + player.y_velocity * dt
+      player.y = possible_y
+      player.y_velocity = player.y_velocity - player.gravity * dt
+   elseif player.y - map.y < newground then
       player.y_velocity = player.y_velocity - player.gravity * dt
    end
    -- ground collision
-   if player.y > player.ground then
+   if (player.y + player.h) - map.y > newground then
       player.y_velocity = 0
-      player.y = player.ground
+      player.y = newground + map.y - player.h
+   end
+   -- ceiling collision
+   if player.y - map.y < 0 then
+      player.y_velocity = 0
+      player.y = map.y
    end
 
    -- update current time
@@ -129,14 +199,17 @@ end
 function love.draw()
    love.graphics.push("all")
    love.graphics.translate(map.x, map.y)
+   -- draw the background tile map
+   for y=0,(map.h/(tiles.h*tiles.scale))-1 do
+       for x=0,(map.w/(tiles.w*tiles.scale))-1 do
+           love.graphics.draw(tiles[tiles.map[y+1][x+1]],
+                              (x*tiles.scale*tiles.w),
+                              (y*tiles.scale*tiles.h))
+       end
+   end
+
    -- draw the platform
    love.graphics.draw(viewport.bg1, viewport.quad1, platform.x, platform.y)
-   oldColor = { love.graphics.getColor() }
-   love.graphics.setColor(0.45, 0.83, 0.95) -- set sky bg color to light-blue
-   love.graphics.rectangle('fill', 0, 0,
-   			   platform.width, platform.y)
-   love.graphics.setColor(oldColor) -- reset previous color
-   -- love.graphics.translate(-1*map.x, -1*map.y)
    love.graphics.pop()
 
    -- draw the sprite
