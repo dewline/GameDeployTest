@@ -53,7 +53,7 @@ function love.load()
       - player.scale * player.img.spriteSheet:getHeight()
    player.speed = player.scale * 300
    -- gravity-based properties for the player sprite
-   player.ground = h -- player.y + player.h -- Landing height
+   player.ground = platform.y -- Landing height
    player.y_velocity = 0
    player.jump_height = -500 * player.scale
    player.gravity = -1100 * player.scale
@@ -79,32 +79,32 @@ function love.load()
    tiles.h = tiles[0]:getHeight()
 
    tiles.map = {
-      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
-      {0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0}, 
-      {0,0,0,0,1,1,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,2,3,3,0}, 
-      {0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,2,2,0,0,0}, 
-      {0,0,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,2,2,0,0,0}, 
-      {0,2,1,1,1,0,0,0,0,0,0,0,0,3,0,0,1,1,1,1,2,2,0,0,0}, 
-      {0,2,0,0,1,0,0,0,0,0,0,0,0,3,0,0,1,1,1,1,2,2,3,3,0}, 
-      {0,2,0,0,1,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0}, 
-      {0,1,1,1,1,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0}, 
-      {0,0,0,0,0,0,0,0,3,1,0,2,2,2,2,3,0,0,0,1,1,1,1,0,0}, 
-      {0,0,0,0,0,0,0,3,3,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 
-      {0,0,0,0,0,0,3,0,3,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,3}, 
-      {0,0,0,0,0,3,3,3,3,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,3}, 
-      {0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,2,0,0,0,0,3,0}, 
-      {0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,3,0,0,3,0,0}, 
-      {0,2,0,0,0,0,0,1,1,1,0,0,0,0,0,0,2,0,2,0,0,3,0,0,0}, 
-      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0}, 
+      {0,0,0,2,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+      {0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+      {0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+      {0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
       {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3}, -- floor
-      {3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3},
+      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+      {0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+      {0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+      {0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+      {0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+      {0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,3,3,0,0,0,0,0,0,0},
+      {0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,3,3,0,0,0,0,0,2,0},
+      {0,3,3,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,3,3,0,0,2,0,2},
+      {0,3,3,0,0,2,2,2,0,0,0,1,0,0,0,0,0,0,3,3,0,0,2,0,2},
+      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0},
+      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, --<< floor
+      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
    }
    tiles.findground = function (tiles, player)
       -- find x-th tile
-      x, y = player.x - map.x, (player.y + player.h) - map.y
-      xindex = math.ceil(x / tiles.w)
-      yindex = math.ceil(y / tiles.h)
+      local x, y = player.x - map.x, (player.y + player.h) - map.y
+      local xindex = math.ceil(x / tiles.w)
+      local yindex = math.ceil(y / tiles.h)
       if xindex == 0 then xindex = 1 end
       if yindex == 0 then yindex = 1 end
       for yindex=yindex+1,#tiles.map do
@@ -112,12 +112,123 @@ function love.load()
 	    return (yindex-1)*tiles.h -- top edge of box
 	 end
       end
-      return 10000 - map.y
+      return player.ground
    end
+   tiles.conwayindex = 1
+   tiles.conwaylimit = 300
+end
+
+function tiles.calculateNumNeighbors(tiles, xindex, yindex)
+   local scale_num = function(num)
+      if num < 1 then return 0 else return 1 end
+   end
+   local xlt = tiles.map[yindex][xindex-1] or tiles.map[yindex][#tiles.map[1]]
+   local xgt = tiles.map[yindex][xindex+1] or tiles.map[yindex][1]
+   local ylt = yindex == 1 and tiles.map[#tiles.map][xindex]
+      or tiles.map[yindex-1][xindex]
+   local ygt = yindex == #tiles.map and tiles.map[1][xindex]
+      or tiles.map[yindex+1][xindex]
+   -- diagonal
+   local xltylt = (xindex == 1)
+      and (yindex == 1
+	      and tiles.map[#tiles.map][#tiles.map[1]]
+	      or tiles.map[yindex-1][#tiles.map[1]])
+      or (yindex == 1
+	     and tiles.map[#tiles.map][xindex-1]
+	     or tiles.map[yindex-1][xindex-1])
+   local xgtylt = (xindex == #tiles.map[1])
+      and (yindex == 1
+	      and tiles.map[#tiles.map][1]
+	      or tiles.map[yindex-1][1])
+      or (yindex == 1
+	     and tiles.map[#tiles.map][xindex+1]
+	     or tiles.map[yindex-1][xindex+1])
+   local xltygt = (xindex == 1)
+      and (yindex == #tiles.map
+	      and tiles.map[1][#tiles.map[1]]
+	      or tiles.map[yindex+1][#tiles.map[1]])
+      or (yindex == #tiles.map
+	     and tiles.map[1][xindex-1]
+	     or tiles.map[yindex+1][xindex-1])
+   local xgtygt = (xindex == #tiles.map[1])
+      and (yindex == #tiles.map
+	      and tiles.map[1][1]
+	      or tiles.map[yindex+1][1])
+      or (yindex == #tiles.map
+	     and tiles.map[1][xindex+1]
+	     or tiles.map[yindex+1][xindex+1])
+
+   local num_neighbors = scale_num(xlt) + scale_num(xgt)
+      + scale_num(ylt) + scale_num(ygt)
+      + scale_num(xltylt) + scale_num(xgtylt)
+      + scale_num(xltygt) + scale_num(xgtygt)
+
+   -- if xindex == 9 and yindex == 16 then
+   --    print(tiles.map[16][8])
+   --    print(tiles.map[16][9])
+   --    print(num_neighbors)
+   -- 
+   --    -- debug.debug()
+   -- end
+   
+   return num_neighbors
+end
+
+function tiles.updateConwayMap(tiles)
+   local clone = function (input)
+      local newtable = {}
+      for yindex=1,#input do
+	 newtable[yindex] = {}
+      end
+      for xindex=1,#input[1] do
+	 for yindex=1,#input do
+	    newtable[yindex][xindex] = input[yindex][xindex]
+	 end
+      end
+      return newtable
+   end
+   tiles.newmap = clone(tiles.map)
+   for xindex=1,#tiles.map[1] do
+      for yindex=1,#tiles.map do
+	 -- only update map if cell is alive
+	 if tiles.map[yindex][xindex] > 0 then
+	    local num_neighbors = tiles:calculateNumNeighbors(xindex, yindex)
+	    ---------------------------------------------	    
+	    --- John Conway's game of life simulation ---
+	    ---------------------------------------------
+	    -- any live cell with fewer than 2 neighbors dies (underpopulation)
+	    if num_neighbors < 2 then
+	       tiles.newmap[yindex][xindex] = 0
+	    -- any live cell with 2 or 3 neighbors lives
+	    elseif num_neighbors <= 3 then
+	       -- nothing changes
+	    -- any live cell with over 3 neighbors dies (overpopulation)
+	    else
+	       tiles.newmap[yindex][xindex] = 0
+	    end
+	 else
+	    local num_neighbors = tiles:calculateNumNeighbors(xindex, yindex)
+	    -- any dead cell with exactly three live neighbors
+	    -- becomes a live cell (reproduction)
+	    if num_neighbors == 3 then
+	       tiles.newmap[yindex][xindex] = 2
+	    end
+	 end
+      end
+   end
+   -- update the conway map all at once at the end of the loop
+   tiles.map = tiles.newmap
+--   debug.debug()
 end
 
 -- called continuously, where the math is done
 function love.update(dt)
+
+   tiles.conwayindex = tiles.conwayindex + 1
+   if tiles.conwaylimit == tiles.conwayindex then
+      tiles.conwayindex = 1 -- reset conway index
+      tiles:updateConwayMap()
+   end
 
    -- calculate sprite texture width and height properties
    local sw, sh = player.imgw, player.imgh
