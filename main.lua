@@ -82,9 +82,9 @@ function love.load()
       {0,0,0,2,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
       {0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
       {0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+      {0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0},
+      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,0,0,0,0,0,0},
+      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0},
       {0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
       {0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
       {0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -102,20 +102,33 @@ function love.load()
    }
    tiles.findground = function (tiles, player)
       -- find x-th tile
-      local x, y = player.x - map.x, (player.y + player.h) - map.y
+      local x, y = player.x - map.x + (player.w/2), (player.y + player.h) - map.y
       local xindex = math.ceil(x / tiles.w)
       local yindex = math.ceil(y / tiles.h)
       if xindex == 0 then xindex = 1 end
       if yindex == 0 then yindex = 1 end
-      for yindex=yindex+1,#tiles.map do
-	 if tiles.map[yindex][xindex] > 0 then
-	    return (yindex-1)*tiles.h -- top edge of box
+      for yindex=yindex,#tiles.map do
+	 local ytop = (yindex-1)*tiles.h
+	 if (tiles.map[yindex][xindex] > 0) and (y <= ytop) then
+            -- return top edge of box
+	    return ytop > player.ground and player.ground or ytop
 	 end
       end
       return player.ground
    end
    tiles.conwayindex = 1
    tiles.conwaylimit = 300
+   tiles:randomizeLayout()
+end
+
+function tiles:randomizeLayout()
+   math.randomseed(os.time()) -- randomize the seed using OS time
+   for xindex=1,#self.map[1] do
+      for yindex=1,#self.map do
+	 val = math.random(-3, 3)
+	 self.map[yindex][xindex] = val < 0 and 0 or val
+      end
+   end
 end
 
 function tiles.calculateNumNeighbors(tiles, xindex, yindex)
@@ -163,14 +176,6 @@ function tiles.calculateNumNeighbors(tiles, xindex, yindex)
       + scale_num(xltylt) + scale_num(xgtylt)
       + scale_num(xltygt) + scale_num(xgtygt)
 
-   -- if xindex == 9 and yindex == 16 then
-   --    print(tiles.map[16][8])
-   --    print(tiles.map[16][9])
-   --    print(num_neighbors)
-   -- 
-   --    -- debug.debug()
-   -- end
-   
    return num_neighbors
 end
 
@@ -200,7 +205,7 @@ function tiles.updateConwayMap(tiles)
 	    if num_neighbors < 2 then
 	       tiles.newmap[yindex][xindex] = 0
 	    -- any live cell with 2 or 3 neighbors lives
-	    elseif num_neighbors <= 3 then
+	    elseif num_neighbors <= 4 then
 	       -- nothing changes
 	    -- any live cell with over 3 neighbors dies (overpopulation)
 	    else
@@ -211,14 +216,13 @@ function tiles.updateConwayMap(tiles)
 	    -- any dead cell with exactly three live neighbors
 	    -- becomes a live cell (reproduction)
 	    if num_neighbors == 3 then
-	       tiles.newmap[yindex][xindex] = 2
+	       tiles.newmap[yindex][xindex] = math.random(1, 3)
 	    end
 	 end
       end
    end
    -- update the conway map all at once at the end of the loop
    tiles.map = tiles.newmap
---   debug.debug()
 end
 
 -- called continuously, where the math is done
@@ -341,7 +345,7 @@ function love.draw()
     		      0, 2*xdirmult, 2, 0)
    
    -- draw text
-   love.graphics.print("Use left/right arrow keys or space to move...", 0, 0)
+   love.graphics.print("Use left/right arrow keys to move and space to jump...", 0, 0)
 end
 
 -- on mouse press
